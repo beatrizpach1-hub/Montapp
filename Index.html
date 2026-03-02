@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Mont.App</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0d0f14;--surface:#161a22;--surface2:#1e2330;--border:#2a3040;--accent:#e8ff47;--accent2:#47c8ff;--warn:#ff6b47;--text:#e8eaf0;--muted:#7a8099;--radius:12px}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif}
+.app{min-height:100vh;display:flex;flex-direction:column}
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;letter-spacing:-0.5px}
+.logo span{color:var(--accent)}
+.user-select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-size:.85rem;cursor:pointer}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#6ee86e;display:inline-block;margin-right:6px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.nav{display:flex;gap:4px;padding:16px 24px 0;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto}
+.nav-btn{font-family:'Syne',sans-serif;font-weight:600;font-size:.8rem;letter-spacing:.05em;text-transform:uppercase;padding:8px 18px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0;transition:all .2s;white-space:nowrap}
+.nav-btn.active{background:var(--bg);color:var(--accent);border:1px solid var(--border);border-bottom:1px solid var(--bg);margin-bottom:-1px}
+.nav-btn:hover:not(.active){color:var(--text)}
+.main{flex:1;padding:24px;max-width:1200px;width:100%;margin:0 auto}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;transition:border-color .2s}
+.card:hover{border-color:var(--accent)}
+.card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem}
+.card-sub{font-size:.82rem;color:var(--muted);margin-top:2px}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:.75rem;font-weight:600}
+.badge-blue{background:#0d2a40;color:var(--accent2)}
+.badge-yellow{background:#2a2800;color:var(--accent)}
+.badge-red{background:#3a1010;color:var(--warn)}
+.badge-green{background:#1a3a1a;color:#6ee86e}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-top:10px}
+.info-item label{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;display:block}
+.info-item span{font-size:.88rem}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tag{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.78rem}
+.tag.highlight{border-color:var(--accent);color:var(--accent)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:8px;font-size:.85rem;font-weight:500;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:var(--accent);color:#0d0f14;font-weight:700}
+.btn-primary:hover{filter:brightness(1.1)}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.btn-ghost:hover{color:var(--text);border-color:var(--text)}
+.btn-danger{background:transparent;color:var(--warn);border:1px solid var(--warn)}
+.btn-danger:hover{background:var(--warn);color:#fff}
+.btn-sm{padding:5px 12px;font-size:.78rem}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto}
+.modal-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;margin-bottom:20px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:24px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
+.form-group input,.form-group select,.form-group textarea{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:8px;font-size:.9rem;font-family:'DM Sans',sans-serif;transition:border-color .2s;outline:none}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent)}
+.form-group select option{background:var(--surface2)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.checkbox-group{display:flex;flex-wrap:wrap;gap:8px}
+.checkbox-item{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:.83rem;transition:border-color .15s;user-select:none}
+.checkbox-item input{accent-color:var(--accent)}
+.checkbox-item.checked{border-color:var(--accent);color:var(--accent)}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.section-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem}
+.conflict-banner{background:#3a1010;border:1px solid var(--warn);border-radius:var(--radius);padding:14px 18px;margin-bottom:16px}
+.conflict-banner strong{color:var(--warn)}
+.horario-item{padding:12px 0;border-bottom:1px solid var(--border)}
+.horario-item:last-child{border-bottom:none}
+.horario-header{display:flex;justify-content:space-between;align-items:flex-start}
+.feria-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.feria-item.conflict{border-color:var(--warn)}
+.empty{text-align:center;padding:48px;color:var(--muted);font-size:.95rem}
+.nota-box{background:var(--surface2);border-left:3px solid var(--accent);padding:10px 14px;border-radius:0 8px 8px 0;font-size:.85rem;margin-top:10px;color:var(--text);white-space:pre-wrap}
+.loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:var(--bg);gap:16px}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--accent);border-radius:10px;padding:12px 20px;font-size:.85rem;z-index:300;animation:slideIn .3s ease}
+@keyframes slideIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.pessoas-mini{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.pessoa-mini{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-size:.73rem}
+@media(max-width:600px){.form-row{grid-template-columns:1fr}.info-grid{grid-template-columns:1fr 1fr}.header{padding:0 12px}.main{padding:16px}.nav-btn{padding:8px 10px;font-size:.7rem}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyC7RsucQ_pU1FMdygSYfSoYKdVkhZ-H2ho",
+    authDomain: "montagens-56090.firebaseapp.com",
+    projectId: "montagens-56090",
+    storageBucket: "montagens-56090.firebasestorage.app",
+    messagingSenderId: "1026178348519",
+    appId: "1:1026178348519:web:92871f3d5bfc8d4d74f942"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  window._db = db;
+  window._fbReady = true;
+  window._fbFns = { collection, doc, onSnapshot, setDoc, deleteDoc, getDocs };
+  window.dispatchEvent(new Event('firebase-ready'));
+</script>
+<script type="text/babel">
+const {useState,useEffect,useRef} = React;
+
+function uid(){ return Math.random().toString(36).slice(2,10); }
+function fmtDate(d){ if(!d) return "—"; const [y,m,dd]=d.split("-"); return `${dd}/${m}/${y}`; }
+
+function detectConflicts(ferias){
+  const byDate={};
+  ferias.forEach(f=>{
+    if(!f.inicio||!f.fim) return;
+    for(let d=new Date(f.inicio);d<=new Date(f.fim);d.setDate(d.getDate()+1)){
+      const k=d.toISOString().slice(0,10);
+      if(!byDate[k])byDate[k]=[];
+      byDate[k].push(f.pessoa);
+    }
+  });
+  const c={};
+  Object.entries(byDate).forEach(([date,p])=>{if(p.length>=2)c[date]=p;});
+  return c;
+}
+
+function getDB(){ return window._db; }
+function getFns(){ return window._fbFns; }
+async function dbSet(col,id,data){ const {doc,setDoc}=getFns(); await setDoc(doc(getDB(),col,id),data); }
+async function dbDel(col,id){ const {doc,deleteDoc}=getFns(); await deleteDoc(doc(getDB(),col,id)); }
+function dbListen(col,cb){
+  const {collection,onSnapshot}=getFns();
+  return onSnapshot(collection(getDB(),col),snap=>{ cb(snap.docs.map(d=>({id:d.id,...d.data()}))); });
+}
+
+function Toast({msg}){ return <div className="toast">✓ {msg}</div>; }
+
+function Modal({title,onClose,children}){
+  return(
+    <div className="overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal">
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+          <div className="modal-title">{title}</div>
+          <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ── MONTAGEM FORM ──
+function MontagemForm({initial,users,onSave,onClose,tipo}){
+  const [form,setForm]=useState(initial||{nome:"",local:"",cliente:"",dataMontagem:"",dataDesmont:"",hotel:"",nota:"",pessoas:[],tipo:tipo||"montagem"});
+  const set=(k,v)=>setForm(f=>({...f,[k]:v}));
+  const toggle=p=>set("pessoas",form.pessoas.includes(p)?form.pessoas.filter(x=>x!==p):[...form.pessoas,p]);
+  return(
+    <>
+      <div className="form-group"><label>Nome do evento</label>
+        <input value={form.nome} onChange={e=>set("nome",e.target.value)} placeholder="ex: BTL 2026"/></div>
+      <div className="form-row">
+        <div className="form-group"><label>Local</label>
+          <input value={form.local} onChange={e=>set("local",e.target.value)} placeholder="Cidade / Recinto"/></div>
+        <div className="form-group"><label>Cliente</label>
+          <input value={form.cliente} onChange={e=>set("cliente",e.target.value)}/></div>
+      </div>
+      <div className="form-row">
+        <div className="form-group"><label>Data {tipo==="desmontagem"?"Desmontagem":"Montagem"}</label>
+          <input type="date" value={form.dataMontagem} onChange={e=>set("dataMontagem",e.target.value)}/></div>
+        <div className="form-group"><label>Data {tipo==="desmontagem"?"Fim":"Desmontagem"}</label>
+          <input type="date" value={form.dataDesmont} onChange={e=>set("dataDesmont",e.target.value)}/></div>
+      </div>
+      <div className="form-group"><label>Hotel</label>
+        <input value={form.hotel} onChange={e=>set("hotel",e.target.value)} placeholder="Nome do hotel"/></div>
+      <div className="form-group"><label>Nota / Observações</label>
+        <textarea rows={3} value={form.nota} onChange={e=>set("nota",e.target.value)} placeholder="Informações adicionais..."/></div>
+      <div className="form-group"><label>Pessoas destacadas</label>
+        <div className="checkbox-group">
+          {users.map(u=>(
+            <label key={u} className={`checkbox-item${form.pessoas.includes(u)?" checked":""}`}>
+              <input type="checkbox" checked={form.pessoas.includes(u)} onChange={()=>toggle(u)}/>{u}
+            </label>
+          ))}
+        </div>
+      </div>
+      <div className="modal-actions">
+        <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+        <button className="btn btn-primary" onClick={()=>onSave(form)} disabled={!form.nome}>Guardar</button>
+      </div>
+    </>
+  );
+}
+
+// ── TAB MONTAGENS / DESMONTAGENS ──
+function TabEventos({tipo, montagens, users, currentUser, isAdmin, toast}){
+  const [modal,setModal]=useState(null);
+  const [expandedId,setExpandedId]=useState(null);
+  const filtered = montagens.filter(m=>(m.tipo||"montagem")===tipo);
+  const label = tipo==="montagem"?"Montagem":"Desmontagem";
+  const icon = tipo==="montagem"?"🏗":"🔧";
+
+  const saveMont=async form=>{
+    const id=modal==="new"?uid():modal.id;
+    await dbSet("montagens",id,{...form,id,tipo});
+    toast(`${label} guardada!`);
+    setModal(null);
+  };
+  const del=async id=>{
+    if(!window.confirm(`Eliminar esta ${label.toLowerCase()}?`))return;
+    await dbDel("montagens",id);
+    toast(`${label} eliminada.`);
+  };
+
+  return(
+    <div>
+      <div className="section-header">
+        <div className="section-title">{icon} {label}s</div>
+        {isAdmin&&<button className="btn btn-primary" onClick={()=>setModal("new")}>+ Nova {label}</button>}
+      </div>
+      {filtered.length===0&&<div className="empty">Nenhuma {label.toLowerCase()} registada.<br/>{isAdmin?`Clica em '+ Nova ${label}'.`:"Aguarda que o admin adicione eventos."}</div>}
+      {filtered.map(m=>{
+        const isMine=m.pessoas?.includes(currentUser);
+        const exp=expandedId===m.id;
+        return(
+          <div key={m.id} className="card">
+            <div className="card-header" style={{cursor:"pointer"}} onClick={()=>setExpandedId(exp?null:m.id)}>
+              <div>
+                <div className="card-title">{m.nome}</div>
+                <div className="card-sub">{m.local}{m.cliente?` · ${m.cliente}`:""}</div>
+              </div>
+              <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap",justifyContent:"flex-end"}}>
+                {isMine&&<span className="badge badge-yellow">✓ Destacado</span>}
+                <span className="badge badge-blue">{fmtDate(m.dataMontagem)} → {fmtDate(m.dataDesmont)}</span>
+                <span style={{color:"var(--muted)"}}>{exp?"▲":"▼"}</span>
+              </div>
+            </div>
+            {exp&&(
+              <>
+                <div className="info-grid">
+                  <div className="info-item"><label>Início</label><span>{fmtDate(m.dataMontagem)}</span></div>
+                  <div className="info-item"><label>Fim</label><span>{fmtDate(m.dataDesmont)}</span></div>
+                  <div className="info-item"><label>Local</label><span>{m.local||"—"}</span></div>
+                  <div className="info-item"><label>Hotel</label><span>{m.hotel||"—"}</span></div>
+                  <div className="info-item"><label>Cliente</label><span>{m.cliente||"—"}</span></div>
+                </div>
+                <div style={{marginTop:12}}>
+                  <div style={{fontSize:".75rem",color:"var(--muted)",textTransform:"uppercase",letterSpacing:".08em",marginBottom:6}}>Pessoas Destacadas</div>
+                  <div className="tags">
+                    {(!m.pessoas||m.pessoas.length===0)&&<span style={{color:"var(--muted)",fontSize:".82rem"}}>Nenhuma</span>}
+                    {(m.pessoas||[]).map(p=><span key={p} className={`tag${p===currentUser?" highlight":""}`}>{p}</span>)}
+                  </div>
+                </div>
+                {m.nota&&<div className="nota-box">📌 {m.nota}</div>}
+                {isAdmin&&(
+                  <div style={{display:"flex",gap:8,marginTop:14}}>
+                    <button className="btn btn-ghost btn-sm" onClick={e=>{e.stopPropagation();setModal(m)}}>✏ Editar</button>
+                    <button className="btn btn-danger btn-sm" onClick={e=>{e.stopPropagation();del(m.id)}}>🗑 Eliminar</button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        );
+      })}
+      {modal&&(
+        <Modal title={modal==="new"?`Nova ${label}`:`Editar ${label}`} onClose={()=>setModal(null)}>
+          <MontagemForm initial={modal!=="new"?modal:undefined} users={users} onSave={saveMont} onClose={()=>setModal(null)} tipo={tipo}/>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+// ── TAB HORÁRIOS ──
+function TabHorarios({montagens,horarios,users,currentUser,isAdmin,toast}){
+  const [modal,setModal]=useState(false);
+  const [form,setForm]=useState({montagemId:"",data:"",horaInicio:"",horaFim:"",nota:"",pessoas:[]});
+
+  const togglePessoa=p=>setForm(f=>({...f,pessoas:f.pessoas.includes(p)?f.pessoas.filter(x=>x!==p):[...f.pessoas,p]}));
+
+  const saveH=async()=>{
+    const id=uid();
+    await dbSet("horarios",id,{...form,id,registadoPor:currentUser,criado:new Date().toISOString()});
+    toast("Horário registado!");
+    setModal(false);
+    setForm({montagemId:"",data:"",horaInicio:"",horaFim:"",nota:"",pessoas:[]});
+  };
+  const del=async id=>{
+    await dbDel("horarios",id);
+    toast("Horário eliminado.");
+  };
+  const exportCSV=()=>{
+    const header=["Pessoa","Evento","Data","Entrada","Saída","Horas","Nota","Registado por"];
+    const rows=[];
+    horarios.forEach(h=>{
+      const mont=montagens.find(m=>m.id===h.montagemId);
+      const pessoas=h.pessoas&&h.pessoas.length>0?h.pessoas:[h.pessoa||h.registadoPor||"—"];
+      let horas="";
+      if(h.horaInicio&&h.horaFim){
+        const [ih,im]=h.horaInicio.split(":").map(Number);
+        const [fh,fm]=h.horaFim.split(":").map(Number);
+        const min=fh*60+fm-ih*60-im;
+        horas=`${Math.floor(min/60)}h${min%60>0?` ${min%60}m`:""}`;
+      }
+      pessoas.forEach(p=>{
+        rows.push([p,mont?.nome||h.montagemId,h.data,h.horaInicio,h.horaFim,horas,h.nota||"",h.registadoPor||""].join(";"));
+      });
+    });
+    const csv=[header.join(";"),...rows].join("\n");
+    const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+    a.download="horarios_montagens.csv";a.click();
+  };
+
+  const byMont={};
+  horarios.forEach(h=>{if(!byMont[h.montagemId])byMont[h.montagemId]=[];byMont[h.montagemId].push(h);});
+
+  const myHorarios=horarios.filter(h=>h.pessoas?.includes(currentUser)||h.registadoPor===currentUser);
+
+  return(
+    <div>
+      <div className="section-header">
+        <div className="section-title">🕐 Horários</div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          {isAdmin&&<button className="btn btn-ghost" onClick={exportCSV}>⬇ Exportar CSV</button>}
+          <button className="btn btn-primary" onClick={()=>setModal(true)}>+ Registar Horário</button>
+        </div>
+      </div>
+
+      {!isAdmin&&(
+        <div style={{background:"var(--surface2)",borderRadius:8,padding:"10px 14px",marginBottom:16,fontSize:".83rem",color:"var(--muted)"}}>
+          A mostrar horários onde <strong style={{color:"var(--text)"}}>{currentUser}</strong> está incluído.
+        </div>
+      )}
+
+      {montagens.length===0&&<div className="empty">Cria primeiro uma montagem para registar horários.</div>}
+
+      {montagens.map(m=>{
+        const entries=byMont[m.id]||[];
+        const visible=isAdmin?entries:entries.filter(h=>h.pessoas?.includes(currentUser)||h.registadoPor===currentUser);
+        if(visible.length===0&&!isAdmin)return null;
+
+        const allPessoas=new Set();
+        visible.forEach(h=>(h.pessoas||[]).forEach(p=>allPessoas.add(p)));
+        const totalMinPorPessoa={};
+        visible.forEach(h=>{
+          if(!h.horaInicio||!h.horaFim)return;
+          const [ih,im]=h.horaInicio.split(":").map(Number);
+          const [fh,fm]=h.horaFim.split(":").map(Number);
+          const min=fh*60+fm-ih*60-im;
+          (h.pessoas||[]).forEach(p=>{
+            totalMinPorPessoa[p]=(totalMinPorPessoa[p]||0)+min;
+          });
+        });
+
+        return(
+          <div key={m.id} className="card">
+            <div className="card-header">
+              <div>
+                <div className="card-title">{m.nome}</div>
+                <div className="card-sub">{m.local} · {(m.tipo||"montagem")==="montagem"?"🏗 Montagem":"🔧 Desmontagem"}</div>
+              </div>
+              <span className="badge badge-blue">{visible.length} registo{visible.length!==1?"s":""}</span>
+            </div>
+
+            {isAdmin&&Object.keys(totalMinPorPessoa).length>0&&(
+              <div style={{marginBottom:12}}>
+                <div style={{fontSize:".72rem",color:"var(--muted)",textTransform:"uppercase",letterSpacing:".08em",marginBottom:6}}>Total por pessoa</div>
+                <div className="tags">
+                  {Object.entries(totalMinPorPessoa).map(([p,min])=>(
+                    <span key={p} className="tag">{p}: <strong>{Math.floor(min/60)}h{min%60>0?` ${min%60}m`:""}</strong></span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {visible.length===0&&<div style={{color:"var(--muted)",fontSize:".83rem"}}>Sem registos ainda.</div>}
+            {visible.map(h=>(
+              <div key={h.id} className="horario-item">
+                <div className="horario-header">
+                  <div>
+                    <div style={{fontSize:".88rem",fontWeight:600}}>{fmtDate(h.data)} · {h.horaInicio} → {h.horaFim}</div>
+                    {h.nota&&<div style={{fontSize:".8rem",color:"var(--muted)",marginTop:2}}>{h.nota}</div>}
+                    <div className="pessoas-mini">
+                      {(h.pessoas||[]).map(p=>(
+                        <span key={p} className={`pessoa-mini${p===currentUser?" highlight":""}`}>{p}</span>
+                      ))}
+                    </div>
+                    {h.registadoPor&&<div style={{fontSize:".72rem",color:"var(--muted)",marginTop:4}}>Registado por: {h.registadoPor}</div>}
+                  </div>
+                  {isAdmin&&<button className="btn btn-danger btn-sm" style={{marginLeft:12,flexShrink:0}} onClick={()=>del(h.id)}>🗑</button>}
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      })}
+
+      {modal&&(
+        <Modal title="Registar Horário" onClose={()=>setModal(false)}>
+          <div style={{background:"var(--surface2)",borderRadius:8,padding:"10px 14px",marginBottom:14,fontSize:".83rem",color:"var(--muted)"}}>
+            A registar como: <strong style={{color:"var(--text)"}}>{currentUser}</strong>
+          </div>
+          <div className="form-group"><label>Evento / Montagem</label>
+            <select value={form.montagemId} onChange={e=>setForm(f=>({...f,montagemId:e.target.value}))}>
+              <option value="">-- Seleciona --</option>
+              {montagens.map(m=><option key={m.id} value={m.id}>{(m.tipo||"montagem")==="montagem"?"🏗":"🔧"} {m.nome}</option>)}
+            </select>
+          </div>
+          <div className="form-group"><label>Data</label>
+            <input type="date" value={form.data} onChange={e=>setForm(f=>({...f,data:e.target.value}))}/></div>
+          <div className="form-row">
+            <div className="form-group"><label>Entrada</label>
+              <input type="time" value={form.horaInicio} onChange={e=>setForm(f=>({...f,horaInicio:e.target.value}))}/></div>
+            <div className="form-group"><label>Saída</label>
+              <input type="time" value={form.horaFim} onChange={e=>setForm(f=>({...f,horaFim:e.target.value}))}/></div>
+          </div>
+          <div className="form-group"><label>Pessoas que fizeram este horário</label>
+            <div className="checkbox-group">
+              {users.map(u=>(
+                <label key={u} className={`checkbox-item${form.pessoas.includes(u)?" checked":""}`}>
+                  <input type="checkbox" checked={form.pessoas.includes(u)} onChange={()=>togglePessoa(u)}/>{u}
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className="form-group"><label>Nota (opcional)</label>
+            <input value={form.nota} onChange={e=>setForm(f=>({...f,nota:e.target.value}))} placeholder="Observações"/></div>
+          <div className="modal-actions">
+            <button className="btn btn-ghost" onClick={()=>setModal(false)}>Cancelar</button>
+            <button className="btn btn-primary" onClick={saveH} disabled={!form.montagemId||!form.data||!form.horaInicio||!form.horaFim||form.pessoas.length===0}>Guardar</button>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+// ── TAB FÉRIAS ──
+function TabFerias({ferias,users,currentUser,isAdmin,toast}){
+  const [modal,setModal]=useState(false);
+  const [form,setForm]=useState({inicio:"",fim:"",nota:""});
+  const conflicts=detectConflicts(ferias);
+  const conflictDates=Object.keys(conflicts);
+  const hasConflict=f=>{
+    if(!f.inicio||!f.fim)return false;
+    for(let d=new Date(f.inicio);d<=new Date(f.fim);d.setDate(d.getDate()+1)){
+      if(conflicts[d.toISOString().slice(0,10)]?.length>=2)return true;
+    }
+    return false;
+  };
+  const saveF=async()=>{
+    const id=uid();
+    await dbSet("ferias",id,{...form,id,pessoa:currentUser});
+    toast("Férias registadas!");
+    setModal(false);setForm({inicio:"",fim:"",nota:""});
+  };
+  const del=async id=>{await dbDel("ferias",id);toast("Férias eliminadas.");};
+  const visible=isAdmin?ferias:ferias.filter(f=>f.pessoa===currentUser);
+  return(
+    <div>
+      <div className="section-header">
+        <div className="section-title">🏖 Férias</div>
+        <button className="btn btn-primary" onClick={()=>setModal(true)}>+ Pedir Férias</button>
+      </div>
+      {conflictDates.length>0&&(
+        <div className="conflict-banner">
+          <strong>⚠ Conflitos detetados!</strong>
+          <div style={{marginTop:6,fontSize:".85rem"}}>
+            {conflictDates.slice(0,6).map(d=>(
+              <div key={d}>📅 {fmtDate(d)}: {conflicts[d].join(", ")}</div>
+            ))}
+            {conflictDates.length>6&&<div>...e mais {conflictDates.length-6} dias</div>}
+          </div>
+        </div>
+      )}
+      {visible.length===0&&<div className="empty">Nenhum pedido de férias registado.</div>}
+      {visible.map(f=>(
+        <div key={f.id} className={`feria-item${hasConflict(f)?" conflict":""}`}>
+          <div>
+            <div style={{fontWeight:600,fontSize:".92rem"}}>{f.pessoa}</div>
+            <div style={{fontSize:".83rem",color:"var(--muted)"}}>{fmtDate(f.inicio)} → {fmtDate(f.fim)}</div>
+            {f.nota&&<div style={{fontSize:".8rem",marginTop:4,color:"var(--muted)"}}>{f.nota}</div>}
+            {hasConflict(f)&&<span className="badge badge-red" style={{marginTop:6,display:"inline-block"}}>⚠ Conflito</span>}
+          </div>
+          {(isAdmin||f.pessoa===currentUser)&&<button className="btn btn-danger btn-sm" onClick={()=>del(f.id)}>🗑</button>}
+        </div>
+      ))}
+      {modal&&(
+        <Modal title="Pedir Férias" onClose={()=>setModal(false)}>
+          <div style={{background:"var(--surface2)",borderRadius:8,padding:"10px 14px",marginBottom:14,fontSize:".83rem",color:"var(--muted)"}}>
+            A registar como: <strong style={{color:"var(--text)"}}>{currentUser}</strong>
+          </div>
+          <div className="form-row">
+            <div className="form-group"><label>Início</label>
+              <input type="date" value={form.inicio} onChange={e=>setForm(f=>({...f,inicio:e.target.value}))}/></div>
+            <div className="form-group"><label>Fim</label>
+              <input type="date" value={form.fim} onChange={e=>setForm(f=>({...f,fim:e.target.value}))}/></div>
+          </div>
+          <div className="form-group"><label>Nota (opcional)</label>
+            <input value={form.nota} onChange={e=>setForm(f=>({...f,nota:e.target.value}))} placeholder="Motivo ou observação"/></div>
+          <div className="modal-actions">
+            <button className="btn btn-ghost" onClick={()=>setModal(false)}>Cancelar</button>
+            <button className="btn btn-primary" onClick={saveF} disabled={!form.inicio||!form.fim}>Guardar</button>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+// ── TAB EQUIPA ──
+function TabEquipa({users,toast}){
+  const [newUser,setNewUser]=useState("");
+  const add=async()=>{
+    if(!newUser.trim())return;
+    const id=uid();
+    await dbSet("users",id,{id,nome:newUser.trim(),ordem:users.length});
+    toast(`${newUser.trim()} adicionado!`);setNewUser("");
+  };
+  const del=async u=>{
+    if(!window.confirm(`Remover ${u.nome}?`))return;
+    await dbDel("users",u.id);toast("Colaborador removido.");
+  };
+  return(
+    <div>
+      <div className="section-header"><div className="section-title">👥 Equipa</div></div>
+      <div className="card" style={{marginBottom:20}}>
+        <div style={{fontSize:".8rem",color:"var(--muted)",marginBottom:10}}>O primeiro utilizador é sempre o <strong style={{color:"var(--accent)"}}>Admin</strong>.</div>
+        <div style={{display:"flex",gap:8}}>
+          <input style={{flex:1,background:"var(--surface2)",border:"1px solid var(--border)",color:"var(--text)",padding:"9px 12px",borderRadius:8,fontSize:".9rem",outline:"none"}}
+            placeholder="Nome do colaborador" value={newUser} onChange={e=>setNewUser(e.target.value)}
+            onKeyDown={e=>e.key==="Enter"&&add()}/>
+          <button className="btn btn-primary" onClick={add} disabled={!newUser.trim()}>+ Adicionar</button>
+        </div>
+      </div>
+      {users.map((u,i)=>(
+        <div key={u.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"var(--surface)",border:"1px solid var(--border)",borderRadius:8,padding:"12px 16px",marginBottom:8}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <span style={{width:28,height:28,borderRadius:"50%",background:"var(--surface2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:".75rem",color:"var(--accent)",fontWeight:700,border:"1px solid var(--border)"}}>{i+1}</span>
+            <span>{u.nome}</span>
+            {i===0&&<span className="badge badge-yellow">Admin</span>}
+          </div>
+          {i>0&&<button className="btn btn-danger btn-sm" onClick={()=>del(u)}>🗑</button>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── APP ──
+function App(){
+  const [ready,setReady]=useState(false);
+  const [tab,setTab]=useState("montagens");
+  const [montagens,setMontagens]=useState([]);
+  const [horarios,setHorarios]=useState([]);
+  const [ferias,setFerias]=useState([]);
+  const [users,setUsers]=useState([]);
+  const [currentUser,setCurrentUser]=useState("");
+  const [toastMsg,setToastMsg]=useState(null);
+  const toastRef=useRef(null);
+
+  const showToast=msg=>{
+    setToastMsg(msg);clearTimeout(toastRef.current);
+    toastRef.current=setTimeout(()=>setToastMsg(null),2500);
+  };
+
+  useEffect(()=>{
+    (async()=>{
+      if(!window._fbReady) await new Promise(res=>window.addEventListener('firebase-ready',res,{once:true}));
+      const {collection,getDocs}=getFns();
+      const snap=await getDocs(collection(getDB(),"users"));
+      if(snap.empty){
+        const seeds=["Beatriz Pacheco (Admin)"];
+        for(let i=0;i<seeds.length;i++){
+          const id=uid();
+          await dbSet("users",id,{id,nome:seeds[i],ordem:i});
+        }
+      }
+      setReady(true);
+    })();
+  },[]);
+
+  useEffect(()=>{
+    if(!ready)return;
+    const u1=dbListen("montagens",docs=>setMontagens(docs.sort((a,b)=>(a.dataMontagem||"").localeCompare(b.dataMontagem||""))));
+    const u2=dbListen("horarios",docs=>setHorarios(docs));
+    const u3=dbListen("ferias",docs=>setFerias(docs));
+    const u4=dbListen("users",docs=>{
+      const sorted=docs.sort((a,b)=>(a.ordem??99)-(b.ordem??99));
+      setUsers(sorted);
+      setCurrentUser(c=>sorted.find(u=>u.nome===c)?.nome||sorted[0]?.nome||"");
+    });
+    return()=>{u1();u2();u3();u4();};
+  },[ready]);
+
+  const isAdmin=users.length>0&&currentUser===users[0]?.nome;
+
+  if(!ready||users.length===0)return(
+    <div className="loading-screen">
+      <div className="spinner"></div>
+      <div style={{fontFamily:"'Syne',sans-serif",color:"var(--accent)",fontWeight:700}}>A ligar ao Firebase...</div>
+      <div style={{color:"var(--muted)",fontSize:".83rem"}}>A sincronizar dados</div>
+    </div>
+  );
+
+  const tabs=[
+    {id:"montagens",label:"🏗 Montagens"},
+    {id:"desmontagens",label:"🔧 Desmontagens"},
+    {id:"horarios",label:"🕐 Horários"},
+    {id:"ferias",label:"🏖 Férias"},
+    ...(isAdmin?[{id:"equipa",label:"👥 Equipa"}]:[]),
+  ];
+
+  return(
+    <div className="app">
+      <header className="header">
+        <div className="logo">MONT<span>.</span>APP</div>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontSize:".75rem",color:"var(--muted)",display:"flex",alignItems:"center"}}>
+            <span className="sync-dot"></span>Online
+          </span>
+          <select className="user-select" value={currentUser} onChange={e=>setCurrentUser(e.target.value)}>
+            {users.map(u=><option key={u.id} value={u.nome}>{u.nome}</option>)}
+          </select>
+          {isAdmin&&<span className="badge badge-yellow">Admin</span>}
+        </div>
+      </header>
+      <nav className="nav">
+        {tabs.map(t=>(
+          <button key={t.id} className={`nav-btn${tab===t.id?" active":""}`} onClick={()=>setTab(t.id)}>{t.label}</button>
+        ))}
+      </nav>
+      <main className="main">
+        {tab==="montagens"&&<TabEventos tipo="montagem" montagens={montagens} users={users.map(u=>u.nome)} currentUser={currentUser} isAdmin={isAdmin} toast={showToast}/>}
+        {tab==="desmontagens"&&<TabEventos tipo="desmontagem" montagens={montagens} users={users.map(u=>u.nome)} currentUser={currentUser} isAdmin={isAdmin} toast={showToast}/>}
+        {tab==="horarios"&&<TabHorarios montagens={montagens} horarios={horarios} users={users.map(u=>u.nome)} currentUser={currentUser} isAdmin={isAdmin} toast={showToast}/>}
+        {tab==="ferias"&&<TabFerias ferias={ferias} users={users.map(u=>u.nome)} currentUser={currentUser} isAdmin={isAdmin} toast={showToast}/>}
+        {tab==="equipa"&&isAdmin&&<TabEquipa users={users} toast={showToast}/>}
+      </main>
+      {toastMsg&&<Toast msg={toastMsg}/>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
